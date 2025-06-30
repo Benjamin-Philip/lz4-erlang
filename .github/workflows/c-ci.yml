@@ -18,4 +18,5 @@ jobs:
         with:
           clang-format-version: '13'
           check-path: 'c_src'
+          exclude-regex: '(lz4|lz4hc|lz4frame|xxhash).(c|h)'
           fallback-style: 'LLVM'
