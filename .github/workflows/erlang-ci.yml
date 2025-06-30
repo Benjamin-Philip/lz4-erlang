@@ -18,8 +18,8 @@ jobs:
       - name: Install Erlang/OTP
         uses: erlef/setup-beam@v1
         with:
-          otp-version: 25.1.0
-          rebar3-version: '3.18.0'
+          otp-version: 28.0
+          rebar3-version: '3.25.0'
 
       - name: Cache Hex packages
         uses: actions/cache@v3
@@ -42,8 +42,8 @@ jobs:
       - name: Install Erlang/OTP
         uses: erlef/setup-beam@v1
         with:
-          otp-version: 25.1.0
-          rebar3-version: '3.18.0'
+          otp-version: 28.0
+          rebar3-version: '3.25.0'
 
       - name: Cache Hex packages
         uses: actions/cache@v3
@@ -69,8 +69,8 @@ jobs:
       - name: Install Erlang/OTP
         uses: erlef/setup-beam@v1
         with:
-          otp-version: 25.1.0
-          rebar3-version: '3.18.0'
+          otp-version: 28.0
+          rebar3-version: '3.25.0'
 
       - name: Cache Hex packages
         uses: actions/cache@v3
@@ -96,8 +96,8 @@ jobs:
       - name: Install Erlang/OTP
         uses: erlef/setup-beam@v1
         with:
-          otp-version: 25.1.0
-          rebar3-version: '3.18.0'
+          otp-version: 28.0
+          rebar3-version: '3.25.0'
 
       - name: Cache Hex packages
         uses: actions/cache@v3
