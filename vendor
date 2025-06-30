@@ -1,0 +1,18 @@
+#!/usr/bin/env sh
+
+REPO="lz4/lz4"
+VERSION=$(curl -s https://api.github.com/repos/$REPO/releases/latest | grep 'tag_name' | cut -d\" -f4)
+ASSET_URL=$(curl -s https://api.github.com/repos/$REPO/releases/latest | grep 'browser_download_url' | head -n 1 | cut -d\" -f4)
+TARBALL=/tmp/$(basename "$ASSET_URL")
+ASSET=/tmp/$(basename -s .tar.gz "$ASSET_URL")
+
+echo "Latest version: $VERSION"
+echo "Downloading from: $ASSET_URL"
+
+curl -sL -o $TARBALL "$ASSET_URL"
+tar -xzvf $TARBALL -C /tmp
+cp -t ./c_src/ \
+    $ASSET/lib/lz4.c $ASSET/lib/lz4.h \
+    $ASSET/lib/lz4hc.c $ASSET/lib/lz4hc.h \
+    $ASSET/lib/lz4frame.c $ASSET/lib/lz4frame.h \
+    $ASSET/lib/xxhash.c $ASSET/lib/xxhash.h

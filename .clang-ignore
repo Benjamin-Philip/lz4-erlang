@@ -1,0 +1,8 @@
+c_src/lz4.c
+c_src/lz4.h
+c_src/lz4hc.c
+c_src/lz4hc.h
+c_src/lz4frame.c
+c_src/lz4frame.h
+c_src/xxhash.c
+c_src/xxhash.h
