@@ -1,25 +1,15 @@
 name: C CI
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: [push, pull_request]
 
 jobs:
   format:
     name: Check Formatting
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
+      - name: Run clang-format style check for C/C++/Protobuf programs.
+        uses: jidicula/clang-format-action@v4.15.0
         with:
-          fetch-depth: 0
-      - uses: jidicula/clang-format-action@v1
-        with:
-          check_only: true
-          paths: |
-            c_src/
-            include/
-          style: file
+          clang-format-version: '13'
+          check-path: 'src'
+          fallback-style: 'LLVM'
