@@ -30,7 +30,7 @@ jobs:
         uses: erlef/setup-beam@v1
         with:
           otp-version: 28.0
-          rebar3-version: '3.18.0'
+          rebar3-version: '3.25.0'
 
       - name: Cache Hex packages
         uses: actions/cache@v3
@@ -44,7 +44,7 @@ jobs:
         run: rebar3 ex_doc
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: 'doc'
 
