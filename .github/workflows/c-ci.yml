@@ -16,7 +16,7 @@ jobs:
       - name: Run clang-format style check for C/C++/Protobuf programs.
         uses: jidicula/clang-format-action@v4.15.0
         with:
-          clang-format-version: '13'
+          clang-format-version: '20'
           check-path: 'c_src'
           exclude-regex: '(lz4|lz4hc|lz4frame|xxhash).(c|h)'
           fallback-style: 'LLVM'
