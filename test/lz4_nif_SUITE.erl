@@ -2,6 +2,7 @@
 
 -export([all/0]).
 -export([compress_default/1, decompress_safe/1]).
+-export([compress_bound/1]).
 -export([doc_test/1]).
 
 -include_lib("common_test/include/ct.hrl").
@@ -12,6 +13,9 @@ all() ->
         %% Simple Functions
         compress_default,
         decompress_safe,
+
+        %% Advanced Functions
+        compress_bound,
 
         %% DocTests
         doc_test
@@ -42,13 +46,21 @@ decompress_safe(_Config) ->
     ?assertError(badarg, lz4_nif:decompress_safe(0, 0)),
     ?assertError(badarg, lz4_nif:decompress_safe(gen_bin(), byte_size(gen_bin()))).
 
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% Advanced Functions %%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+compress_bound(_Config) ->
+    ?assertEqual(26, lz4_nif:compress_bound(10)),
+    ?assertError(badarg, lz4_nif:compress_bound(-1)),
+    ?assertError(badarg, lz4_nif:compress_bound(foo)).
+
 %%%%%%%%%%%%%%
 %% DocTests %%
 %%%%%%%%%%%%%%
 
 doc_test(_Config) ->
     shell_docs:test(lz4_nif, []).
-%% doctest:module(lz4_nif).
 
 %%%%%%%%%%%%%
 %% Helpers %%

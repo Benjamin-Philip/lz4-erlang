@@ -64,7 +64,38 @@ static ERL_NIF_TERM decompress_safe(ErlNifEnv *env, int argc,
   return dst;
 }
 
-static ErlNifFunc nif_funcs[] = {{"compress_default", 1, compress_default},
-                                 {"decompress_safe", 2, decompress_safe}};
+/**********************/
+/* Advanced Functions */
+/**********************/
+
+static ERL_NIF_TERM compress_bound(ErlNifEnv *env, int argc,
+                                   const ERL_NIF_TERM argv[]) {
+  int input_size;
+
+  if (!enif_get_int(env, argv[0], &input_size)) {
+    return enif_make_badarg(env);
+  }
+
+  int result = LZ4_compressBound(input_size);
+
+  if (result == 0) {
+    return enif_make_badarg(env);
+  }
+
+  return enif_make_int(env, result);
+}
+
+/******************/
+/* NIF Management */
+/******************/
+
+static ErlNifFunc nif_funcs[] = {
+    // Simple Functions
+
+    {"compress_default", 1, compress_default},
+    {"decompress_safe", 2, decompress_safe},
+
+    // Advanced Functions
+    {"compress_bound", 1, compress_bound}};
 
 ERL_NIF_INIT(lz4_nif, nif_funcs, NULL, NULL, NULL, NULL);

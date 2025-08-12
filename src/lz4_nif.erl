@@ -10,8 +10,19 @@ for more details.
 """.
 
 -export([compress_default/1, decompress_safe/2]).
--nifs([compress_default/1, decompress_safe/2]).
+-export([compress_bound/1]).
+-nifs([
+    %% Simple Functions
+    compress_default/1,
+    decompress_safe/2,
+    %% Advanced Functions
+    compress_bound/1
+]).
 -on_load(init/0).
+
+%%%%%%%%%%%%%%%%%%%%%%
+%% Simple Functions %%
+%%%%%%%%%%%%%%%%%%%%%%
 
 -doc """
 Compresses a binary. Analogous to `LZ4_compress_default`.
@@ -77,6 +88,39 @@ Raises a `badarg` if:
 -spec decompress_safe(Src :: binary(), MaxDstSize :: pos_integer()) -> Dst :: binary().
 decompress_safe(_, _) ->
     not_loaded(?LINE).
+
+%%%%%%%%%%%%%%%%%%%%%%%%
+%% Advanced Functions %%
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+-doc """
+Maximum compression output size in a worst case scenario. Analogous to
+`LZ4_compressBound`.
+
+Provides the maximum size that LZ4 compression may output in a worst case
+scenario (input data not compressible). Raises badarg if input size is incorrect
+(too large or negative):
+
+```
+1> lz4_nif:compress_bound(10).
+26
+2> lz4_nif:compress_bound(-1).
+** exception error: bad argument
+     in function  lz4_nif:compress_bound/1
+        called as lz4_nif:compress_bound(-1)
+3> lz4_nif:compress_bound(foo).
+** exception error: bad argument
+     in function  lz4_nif:compress_bound/1
+        called as lz4_nif:compress_bound(foo)
+```
+""".
+-spec compress_bound(InputSize :: pos_integer()) -> integer().
+compress_bound(_) ->
+    not_loaded(?LINE).
+
+%%%%%%%%%%%%%%%%%%%%
+%% NIF Management %%
+%%%%%%%%%%%%%%%%%%%%
 
 init() ->
     erlang:load_nif("priv/lz4_nif", 0).
