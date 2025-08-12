@@ -1,7 +1,7 @@
 -module(lz4_nif_SUITE).
 
 -export([all/0]).
--export([compress_default/1, decompress_safe/1]).
+-export([compress_default/1, compress_hc/1, decompress_safe/1]).
 -export([compress_bound/1, compress_fast/1, compress_dest_size/1, decompress_safe_partial/1]).
 -export([doc_test/1]).
 
@@ -12,6 +12,7 @@ all() ->
     [
         %% Simple Functions
         compress_default,
+        compress_hc,
         decompress_safe,
 
         %% Advanced Functions
@@ -37,6 +38,33 @@ compress_default(_Config) ->
     ?assertEqual(CompressedBin, lz4_nif:compress_default(Bin)),
 
     ?assertError(badarg, lz4_nif:compress_default(0)).
+
+compress_hc(_Config) ->
+    Bin = gen_bin(),
+    CompressedBin = lz4_nif:compress_hc(Bin, 2),
+    ?assertEqual(Bin, lz4_nif:decompress_safe(CompressedBin, byte_size(Bin))),
+
+    Bin2 = gen_bin(),
+    Bin3 = gen_bin(),
+    Bin4 = gen_bin(),
+    BinList = [rand:uniform(4) || _ <- lists:duplicate(20, 0)],
+    LargeBin = <<
+        case X of
+            1 ->
+                Bin;
+            2 ->
+                Bin2;
+            3 ->
+                Bin3;
+            _ ->
+                Bin4
+        end
+     || X <- BinList
+    >>,
+    ?assertNotEqual(lz4_nif:compress_hc(LargeBin, 1), lz4_nif:compress_hc(LargeBin, 12)),
+
+    ?assertError(badarg, lz4_nif:compress_hc(foo, 2)),
+    ?assertError(badarg, lz4_nif:compress_hc(Bin, foo)).
 
 decompress_safe(_Config) ->
     Bin = gen_bin(),

@@ -9,11 +9,12 @@ Manual](https://github.com/lz4/lz4/blob/cacca37747572717ceb1f156eb9840644205ca4f
 for more details.
 """.
 
--export([compress_default/1, decompress_safe/2]).
+-export([compress_default/1, compress_hc/2, decompress_safe/2]).
 -export([compress_bound/1, compress_fast/2, compress_dest_size/2, decompress_safe_partial/2]).
 -nifs([
     %% Simple Functions
     compress_default/1,
+    compress_hc/2,
     decompress_safe/2,
     %% Advanced Functions
     compress_bound/1,
@@ -44,6 +45,30 @@ Raises a `badarg` otherwise:
 """.
 -spec compress_default(Src :: binary()) -> Dst :: binary().
 compress_default(_) ->
+    not_loaded(?LINE).
+
+-doc """
+Compresses a binary with the HC algorithm. Analogous to `LZ4_compress_HC`.
+
+Compresses a binary with the HC algorithm given a binary and an positive
+integral compression level. Raises a `badarg` otherwise:
+
+```
+1> Bin = <<186,157,97,206,111,222,177,60,97,148,186,157,97,206,111,
+   186,157,97,206,111,173,54,194,166,118,222,177,60,97,148,186,157,
+   97,206,111,222,177,60,97,148,222,177,60,97,148,222,177,60,97,148>>.
+2> CompressedBin1 = lz4_nif:compress_hc(Bin, 1).
+3> CompressedBin12 = lz4_nif:compress_hc(Bin, 12).
+4> CompressedBin1 =/= CompressedBin12.
+true
+5> byte_size(CompressedBin1) >= byte_size(CompressedBin12).
+true
+6> lz4_nif:decompress_safe(CompressedBin1, byte_size(Bin)) =:= lz4_nif:decompress_safe(CompressedBin12, byte_size(Bin)).
+true
+```
+""".
+-spec compress_hc(Src :: binary(), CompressionLevel :: pos_integer()) -> Dst :: binary().
+compress_hc(_, _) ->
     not_loaded(?LINE).
 
 -doc """
@@ -230,7 +255,6 @@ Raises a `badarg` if:
      in function  lz4_nif:decompress_safe_partial/2
         called as lz4_nif:decompress_safe_partial(<<48,1,2,3>>,foo)
 ```
-
 """.
 -spec decompress_safe_partial(Src :: binary(), TargetDstSize :: pos_integer()) -> Dst :: binary().
 decompress_safe_partial(_, _) ->
