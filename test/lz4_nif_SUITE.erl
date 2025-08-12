@@ -2,7 +2,7 @@
 
 -export([all/0]).
 -export([compress_default/1, decompress_safe/1]).
--export([compress_bound/1, compress_fast/1]).
+-export([compress_bound/1, compress_fast/1, compress_dest_size/1]).
 -export([doc_test/1]).
 
 -include_lib("common_test/include/ct.hrl").
@@ -17,6 +17,7 @@ all() ->
         %% Advanced Functions
         compress_bound,
         compress_fast,
+        compress_dest_size,
 
         %% DocTests
         doc_test
@@ -66,6 +67,16 @@ compress_fast(_Config) ->
 
     ?assertError(badarg, lz4_nif:compress_fast(foo, 2)),
     ?assertError(badarg, lz4_nif:compress_fast(Bin, foo)).
+
+compress_dest_size(_Config) ->
+    Bin = gen_bin(),
+    {CompressBin, BytesRead} = lz4_nif:compress_dest_size(Bin, 3),
+    ?assertEqual(binary:part(Bin, 0, BytesRead), lz4_nif:decompress_safe(CompressBin, BytesRead)),
+
+    ?assertError(badarg, lz4_nif:compress_dest_size(Bin, -2)),
+    ?assertError(badarg, lz4_nif:compress_dest_size(Bin, foo)),
+    ?assertError(badarg, lz4_nif:compress_dest_size(foo, 3)).
+
 
 %%%%%%%%%%%%%%
 %% DocTests %%

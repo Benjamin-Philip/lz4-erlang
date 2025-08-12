@@ -10,14 +10,15 @@ for more details.
 """.
 
 -export([compress_default/1, decompress_safe/2]).
--export([compress_bound/1, compress_fast/2]).
+-export([compress_bound/1, compress_fast/2, compress_dest_size/2]).
 -nifs([
     %% Simple Functions
     compress_default/1,
     decompress_safe/2,
     %% Advanced Functions
     compress_bound/1,
-    compress_fast/2
+    compress_fast/2,
+    compress_dest_size/2
 ]).
 -on_load(init/0).
 
@@ -154,6 +155,38 @@ Raises a `badarg` on non binary and integral values:
 """.
 -spec compress_fast(Src :: binary(), Acceleration :: integer()) -> Dst :: binary().
 compress_fast(_, _) ->
+    not_loaded(?LINE).
+
+-doc """
+Compress as many bytes as possible into a binary of fixed length. Analogous to
+`LZ4_compress_destSize`
+
+Compresses as many bytes from binary `Src` as possible into a binary `Dst` of
+fixed length `TargetDstSize`. Returns a tuple pair of the compressed binary and
+the number of bytes compressed from `Src`:
+
+```
+1> {Compressed, BytesRead} = lz4_nif:compress_dest_size(<<1, 2, 3, 4>>, 3).
+{<<32,1,2>>,2}
+2> lz4_nif:decompress_safe(Compressed, BytesRead).
+<<1,2>>
+```
+
+Raises a `badarg` on non binary and integral values:
+
+```
+1> lz4_nif:compress_dest_size(foo, 1).
+** exception error: bad argument
+     in function  lz4_nif:compress_dest_size/2
+        called as lz4_nif:compress_dest_size(foo,1)
+2> lz4_nif:compress_dest_size(<<1, 2, 3>>, foo).
+** exception error: bad argument
+     in function  lz4_nif:compress_dest_size/2
+        called as lz4_nif:compress_dest_size(<<1,2,3>>,foo)
+```
+""".
+-spec compress_dest_size(Src :: binary(), TargetDstSize :: integer()) -> {Dst :: binary(), BytesRead :: pos_integer()}.
+compress_dest_size(_, _) ->
     not_loaded(?LINE).
 
 %%%%%%%%%%%%%%%%%%%%
