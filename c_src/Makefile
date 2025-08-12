@@ -3,15 +3,13 @@
 CURDIR := $(shell pwd)
 BASEDIR := $(abspath $(CURDIR)/..)
 
-PROJECT ?= $(notdir $(BASEDIR))
-PROJECT := $(strip $(PROJECT))
-
 ERTS_INCLUDE_DIR ?= $(shell erl -noshell -eval "io:format(\"~ts/erts-~ts/include/\", [code:root_dir(), erlang:system_info(version)])." -s init stop)
 ERL_INTERFACE_INCLUDE_DIR ?= $(shell erl -noshell -eval "io:format(\"~ts\", [code:lib_dir(erl_interface, include)])." -s init stop)
 ERL_INTERFACE_LIB_DIR ?= $(shell erl -noshell -eval "io:format(\"~ts\", [code:lib_dir(erl_interface, lib)])." -s init stop)
 
 C_SRC_DIR = $(CURDIR)
-C_SRC_OUTPUT ?= $(CURDIR)/../priv/$(PROJECT).so
+LZ4_NIF_OUTPUT ?= $(CURDIR)/../priv/lz4_nif.so
+LZ4FRAME_NIF_OUTPUT ?= $(CURDIR)/../priv/lz4_frame_nif.so
 
 # System type and C compiler/flags.
 
@@ -48,27 +46,21 @@ cpp_verbose = $(cpp_verbose_$(V))
 link_verbose_0 = @echo " LD    " $(@F);
 link_verbose = $(link_verbose_$(V))
 
-SOURCES := $(shell find $(C_SRC_DIR) -type f \( -name "*.c" -o -name "*.C" -o -name "*.cc" -o -name "*.cpp" \))
+SOURCES := $(shell find $(C_SRC_DIR) -type f \( -name "*.c" -and ! -name "*_nif.c" \))
 OBJECTS = $(addsuffix .o, $(basename $(SOURCES)))
 
 COMPILE_C = $(c_verbose) $(CC) $(CFLAGS) $(CPPFLAGS) -c
-COMPILE_CPP = $(cpp_verbose) $(CXX) $(CXXFLAGS) $(CPPFLAGS) -c
 
-$(C_SRC_OUTPUT): $(OBJECTS)
+$(LZ4_NIF_OUTPUT): lz4_nif.c $(OBJECTS)
 	@mkdir -p $(BASEDIR)/priv/
-	$(link_verbose) $(CC) $(OBJECTS) $(LDFLAGS) $(LDLIBS) -o $(C_SRC_OUTPUT)
+	$(link_verbose) $(CC) lz4_nif.c $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $(LZ4_NIF_OUTPUT)
+
+$(LZ4FRAME_NIF_OUTPUT): lz4frame_nif.c $(OBJECTS)
+	@mkdir -p $(BASEDIR)/priv/
+	$(link_verbose) $(CC) lz4frame_nif.c $(OBJECTS) $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $(LZ4FRAME_NIF_OUTPUT)
 
 %.o: %.c
 	$(COMPILE_C) $(OUTPUT_OPTION) $<
-
-%.o: %.cc
-	$(COMPILE_CPP) $(OUTPUT_OPTION) $<
-
-%.o: %.C
-	$(COMPILE_CPP) $(OUTPUT_OPTION) $<
-
-%.o: %.cpp
-	$(COMPILE_CPP) $(OUTPUT_OPTION) $<
 
 clean:
 	@rm -f $(C_SRC_OUTPUT) $(OBJECTS)
