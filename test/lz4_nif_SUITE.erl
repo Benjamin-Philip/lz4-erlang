@@ -67,7 +67,6 @@ compress_fast(_Config) ->
     ?assertError(badarg, lz4_nif:compress_fast(foo, 2)),
     ?assertError(badarg, lz4_nif:compress_fast(Bin, foo)).
 
-
 %%%%%%%%%%%%%%
 %% DocTests %%
 %%%%%%%%%%%%%%
