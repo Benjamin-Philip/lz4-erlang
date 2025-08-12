@@ -2,7 +2,7 @@
 
 -export([all/0]).
 -export([compress_default/1, decompress_safe/1]).
--export([compress_bound/1]).
+-export([compress_bound/1, compress_fast/1]).
 -export([doc_test/1]).
 
 -include_lib("common_test/include/ct.hrl").
@@ -16,6 +16,7 @@ all() ->
 
         %% Advanced Functions
         compress_bound,
+        compress_fast,
 
         %% DocTests
         doc_test
@@ -28,10 +29,10 @@ all() ->
 compress_default(_Config) ->
     Bin = gen_bin(),
     CompressedBin = lz4_nif:compress_default(Bin),
-    ?assertNotEqual(Bin, CompressedBin),
-    % check determininism
-    ?assertEqual(CompressedBin, lz4_nif:compress_default(Bin)),
     ?assert(is_binary(CompressedBin)),
+    ?assertNotEqual(Bin, CompressedBin),
+    % check determininism to check allocated size
+    ?assertEqual(CompressedBin, lz4_nif:compress_default(Bin)),
 
     ?assertError(badarg, lz4_nif:compress_default(0)).
 
@@ -55,6 +56,18 @@ compress_bound(_Config) ->
     ?assertError(badarg, lz4_nif:compress_bound(-1)),
     ?assertError(badarg, lz4_nif:compress_bound(foo)).
 
+compress_fast(_Config) ->
+    Bin = gen_bin(),
+    CompressedBin = lz4_nif:compress_fast(Bin, 2),
+    ?assertEqual(Bin, lz4_nif:decompress_safe(CompressedBin, byte_size(Bin))),
+
+    LargeBin = <<X || X <- lists:duplicate(10, Bin)>>,
+    ?assertNotEqual(lz4_nif:compress_fast(LargeBin, 1), lz4_nif:compress_fast(LargeBin, 6000)),
+
+    ?assertError(badarg, lz4_nif:compress_fast(foo, 2)),
+    ?assertError(badarg, lz4_nif:compress_fast(Bin, foo)).
+
+
 %%%%%%%%%%%%%%
 %% DocTests %%
 %%%%%%%%%%%%%%
@@ -67,4 +80,6 @@ doc_test(_Config) ->
 %%%%%%%%%%%%%
 
 gen_bin() ->
-    crypto:strong_rand_bytes(16).
+    gen_bin(16).
+gen_bin(N) ->
+    crypto:strong_rand_bytes(N).

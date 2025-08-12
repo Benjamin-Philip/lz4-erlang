@@ -10,13 +10,14 @@ for more details.
 """.
 
 -export([compress_default/1, decompress_safe/2]).
--export([compress_bound/1]).
+-export([compress_bound/1, compress_fast/2]).
 -nifs([
     %% Simple Functions
     compress_default/1,
     decompress_safe/2,
     %% Advanced Functions
-    compress_bound/1
+    compress_bound/1,
+    compress_fast/2
 ]).
 -on_load(init/0).
 
@@ -116,6 +117,43 @@ scenario (input data not compressible). Raises badarg if input size is incorrect
 """.
 -spec compress_bound(InputSize :: pos_integer()) -> integer().
 compress_bound(_) ->
+    not_loaded(?LINE).
+
+-doc """
+Accelerated compression. Analogous to `LZ4_compress_fast`.
+
+Compresses a binary at an accelerated speed, given a source binary and an
+acceleration integer. See [LZ4
+Manual](https://github.com/lz4/lz4/blob/cacca37747572717ceb1f156eb9840644205ca4f/doc/lz4_manual.html)
+for more details regarding acceleration:
+
+```
+1> Bin = <<X || X <- lists:duplicate(9, <<1, 2, 3>>)>>.
+<<1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3>>
+2> lz4_nif:compress_fast(Bin, 6000).
+<<240,12,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,1,2,3,
+  1,2,3>>
+3> lz4_nif:compress_fast(Bin, 2).
+<<63,1,2,3,3,0,0,80,2,3,1,2,3>>
+4> lz4_nif:compress_fast(Bin, -1).
+<<63,1,2,3,3,0,0,80,2,3,1,2,3>>
+```
+
+Raises a `badarg` on non binary and integral values:
+
+```
+1> lz4_nif:compress_fast(foo, 1).
+** exception error: bad argument
+     in function  lz4_nif:compress_fast/2
+        called as lz4_nif:compress_fast(foo,1)
+2> lz4_nif:compress_fast(<<1, 2, 3>>, foo).
+** exception error: bad argument
+     in function  lz4_nif:compress_fast/2
+        called as lz4_nif:compress_fast(<<1,2,3>>,foo)
+```
+""".
+-spec compress_fast(Src :: binary(), Acceleration :: integer()) -> Dst :: binary().
+compress_fast(_, _) ->
     not_loaded(?LINE).
 
 %%%%%%%%%%%%%%%%%%%%
