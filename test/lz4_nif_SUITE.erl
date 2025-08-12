@@ -2,7 +2,7 @@
 
 -export([all/0]).
 -export([compress_default/1, decompress_safe/1]).
--export([compress_bound/1, compress_fast/1, compress_dest_size/1]).
+-export([compress_bound/1, compress_fast/1, compress_dest_size/1, decompress_safe_partial/1]).
 -export([doc_test/1]).
 
 -include_lib("common_test/include/ct.hrl").
@@ -18,6 +18,7 @@ all() ->
         compress_bound,
         compress_fast,
         compress_dest_size,
+        decompress_safe_partial,
 
         %% DocTests
         doc_test
@@ -40,11 +41,11 @@ compress_default(_Config) ->
 decompress_safe(_Config) ->
     Bin = gen_bin(),
     CompressedBin = lz4_nif:compress_default(Bin),
-    CompressedBinSize = byte_size(Bin),
-    ?assertEqual(Bin, lz4_nif:decompress_safe(CompressedBin, CompressedBinSize)),
-    ?assertEqual(Bin, lz4_nif:decompress_safe(CompressedBin, CompressedBinSize + 1)),
+    BinSize = byte_size(Bin),
+    ?assertEqual(Bin, lz4_nif:decompress_safe(CompressedBin, BinSize)),
+    ?assertEqual(Bin, lz4_nif:decompress_safe(CompressedBin, BinSize + 1)),
 
-    ?assertError(badarg, lz4_nif:decompress_safe(CompressedBin, CompressedBinSize - 1)),
+    ?assertError(badarg, lz4_nif:decompress_safe(CompressedBin, BinSize - 1)),
     ?assertError(badarg, lz4_nif:decompress_safe(0, 0)),
     ?assertError(badarg, lz4_nif:decompress_safe(gen_bin(), byte_size(gen_bin()))).
 
@@ -77,6 +78,20 @@ compress_dest_size(_Config) ->
     ?assertError(badarg, lz4_nif:compress_dest_size(Bin, foo)),
     ?assertError(badarg, lz4_nif:compress_dest_size(foo, 3)).
 
+decompress_safe_partial(_Config) ->
+    Bin = gen_bin(),
+    CompressedBin = lz4_nif:compress_default(Bin),
+    BinSize = byte_size(Bin),
+    ?assertEqual(Bin, lz4_nif:decompress_safe_partial(CompressedBin, BinSize)),
+    ?assertEqual(Bin, lz4_nif:decompress_safe_partial(CompressedBin, BinSize + 1)),
+    ?assertEqual(
+        binary:part(Bin, 0, BinSize - 3),
+        lz4_nif:decompress_safe_partial(CompressedBin, BinSize - 3)
+    ),
+
+    ?assertError(badarg, lz4_nif:decompress_safe(Bin, 0)),
+    ?assertError(badarg, lz4_nif:decompress_safe(foo, BinSize)),
+    ?assertError(badarg, lz4_nif:decompress_safe(gen_bin(), byte_size(gen_bin()))).
 
 %%%%%%%%%%%%%%
 %% DocTests %%

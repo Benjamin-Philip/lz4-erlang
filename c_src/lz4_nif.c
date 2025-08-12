@@ -143,6 +143,36 @@ static ERL_NIF_TERM compress_dest_size(ErlNifEnv *env, int argc,
   return enif_make_tuple2(env, dst, bytes_read);
 }
 
+static ERL_NIF_TERM decompress_safe_partial(ErlNifEnv *env, int argc,
+                                            const ERL_NIF_TERM argv[]) {
+  ERL_NIF_TERM src = argv[0];
+  ErlNifBinary src_bin;
+  int target_dst_size;
+
+  if ((!enif_inspect_binary(env, src, &src_bin)) ||
+      !enif_get_int(env, argv[1], &target_dst_size) || (target_dst_size <= 0)) {
+    return enif_make_badarg(env);
+  }
+
+  const char *src_data = (char *)src_bin.data;
+
+  ErlNifBinary dst_bin;
+  enif_alloc_binary(target_dst_size, &dst_bin);
+  char *dst_data = (char *)dst_bin.data;
+
+  int dst_size = LZ4_decompress_safe_partial(src_data, dst_data, src_bin.size,
+                                             target_dst_size, target_dst_size);
+
+  if (dst_size <= 0) {
+    return enif_make_badarg(env);
+  }
+
+  enif_realloc_binary(&dst_bin, dst_size);
+  ERL_NIF_TERM dst = enif_make_binary(env, &dst_bin);
+
+  return dst;
+}
+
 /******************/
 /* NIF Management */
 /******************/
@@ -156,6 +186,7 @@ static ErlNifFunc nif_funcs[] = {
     // Advanced Functions
     {"compress_bound", 1, compress_bound},
     {"compress_fast", 2, compress_fast},
-    {"compress_dest_size", 2, compress_dest_size}};
+    {"compress_dest_size", 2, compress_dest_size},
+    {"decompress_safe_partial", 2, decompress_safe_partial}};
 
 ERL_NIF_INIT(lz4_nif, nif_funcs, NULL, NULL, NULL, NULL);

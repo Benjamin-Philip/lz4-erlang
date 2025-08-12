@@ -10,7 +10,7 @@ for more details.
 """.
 
 -export([compress_default/1, decompress_safe/2]).
--export([compress_bound/1, compress_fast/2, compress_dest_size/2]).
+-export([compress_bound/1, compress_fast/2, compress_dest_size/2, decompress_safe_partial/2]).
 -nifs([
     %% Simple Functions
     compress_default/1,
@@ -18,7 +18,8 @@ for more details.
     %% Advanced Functions
     compress_bound/1,
     compress_fast/2,
-    compress_dest_size/2
+    compress_dest_size/2,
+    decompress_safe_partial/2
 ]).
 -on_load(init/0).
 
@@ -185,8 +186,54 @@ Raises a `badarg` on non binary and integral values:
         called as lz4_nif:compress_dest_size(<<1,2,3>>,foo)
 ```
 """.
--spec compress_dest_size(Src :: binary(), TargetDstSize :: integer()) -> {Dst :: binary(), BytesRead :: pos_integer()}.
+-spec compress_dest_size(Src :: binary(), TargetDstSize :: integer()) ->
+    {Dst :: binary(), BytesRead :: pos_integer()}.
 compress_dest_size(_, _) ->
+    not_loaded(?LINE).
+
+-doc """
+Decompresses as many bytes as possible into a binary of fixed length. Analogous
+to `LZ4_decompress_safe_partial`.
+
+Safely decompresses as many bytes as possible into a binary (`Dst`) of fixed
+length (`TargetDstSize`), given a valid binary input (`Src`). Re-allocates the
+returned uncompressed binary to its actual size:
+
+```
+1> Compressed = lz4_nif:compress_default(<<1, 2, 3>>).
+<<48, 1, 2, 3>>
+2> lz4_nif:decompress_safe_partial(Compressed, 2).
+<<1, 2>>
+3> lz4_nif:decompress_safe_partial(Compressed, 3).
+<<1, 2, 3>>
+4> lz4_nif:decompress_safe_partial(Compressed, 10).
+<<1, 2, 3>>
+```
+
+Raises a `badarg` if:
+
+- `Src` binary is malformed or otherwise malicious
+- `Src` is not a binary
+- `TargetDstSize` is not an integer
+
+```
+1> lz4_nif:decompress_safe_partial(<<"malformed", 1, 2, 3>>, 10).
+** exception error: bad argument
+     in function  lz4_nif:decompress_safe_partial/2
+        called as lz4_nif:decompress_safe_partial(<<109,97,108,102,111,114,109,101,100,1,2,3>>,10)
+2> lz4_nif:decompress_safe_partial(foo, 3).
+** exception error: bad argument
+     in function  lz4_nif:decompress_safe_partial/2
+        called as lz4_nif:decompress_safe_partial(foo,3)
+3> lz4_nif:decompress_safe_partial(lz4_nif:compress_default(<<1, 2, 3>>), foo).
+** exception error: bad argument
+     in function  lz4_nif:decompress_safe_partial/2
+        called as lz4_nif:decompress_safe_partial(<<48,1,2,3>>,foo)
+```
+
+""".
+-spec decompress_safe_partial(Src :: binary(), TargetDstSize :: pos_integer()) -> Dst :: binary().
+decompress_safe_partial(_, _) ->
     not_loaded(?LINE).
 
 %%%%%%%%%%%%%%%%%%%%
