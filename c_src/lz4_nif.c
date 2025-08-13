@@ -156,22 +156,67 @@ static ERL_NIF_TERM compress_dest_size(ErlNifEnv *env, int argc,
   int dst_size;
 
   if ((!enif_inspect_binary(env, src, &src_bin)) ||
-      !enif_get_int(env, argv[1], &dst_size) || (dst_size <= 0)) {
+      (!enif_get_int(env, argv[1], &dst_size)) || (dst_size <= 0)) {
     return enif_make_badarg(env);
   }
 
   const char *src_data = (char *)src_bin.data;
   int src_size = src_bin.size;
 
-  ERL_NIF_TERM dst;
-  char *dst_data = (char *)enif_make_new_binary(env, dst_size, &dst);
+  ErlNifBinary dst_bin;
+  enif_alloc_binary(dst_size, &dst_bin);
+  char *dst_data = (char *)dst_bin.data;
 
-  int result = LZ4_compress_destSize(src_data, dst_data, &src_size, dst_size);
+  int final_dst_size =
+      LZ4_compress_destSize(src_data, dst_data, &src_size, dst_size);
 
-  if (result == 0) {
+  if (final_dst_size == 0) {
     return enif_make_badarg(env);
   }
 
+  enif_realloc_binary(&dst_bin, final_dst_size);
+  ERL_NIF_TERM dst = enif_make_binary(env, &dst_bin);
+  ERL_NIF_TERM bytes_read = enif_make_int(env, src_size);
+  return enif_make_tuple2(env, dst, bytes_read);
+}
+
+static ERL_NIF_TERM compress_hc_dest_size(ErlNifEnv *env, int argc,
+                                          const ERL_NIF_TERM argv[]) {
+  ERL_NIF_TERM src = argv[0];
+  ErlNifBinary src_bin;
+  int dst_size;
+  int compression_level;
+
+  if ((!enif_inspect_binary(env, src, &src_bin)) ||
+      (!enif_get_int(env, argv[1], &dst_size)) ||
+      (!enif_get_int(env, argv[2], &compression_level)) || (dst_size <= 0) ||
+      (compression_level <= 0)) {
+    return enif_make_badarg(env);
+  }
+
+  const char *src_data = (char *)src_bin.data;
+  int src_size = src_bin.size;
+
+  ErlNifBinary dst_bin;
+  enif_alloc_binary(dst_size, &dst_bin);
+  char *dst_data = (char *)dst_bin.data;
+
+  // Ensure state_hc is not NULL
+  void *state_hc;
+  do {
+    state_hc = enif_alloc(LZ4_sizeofStateHC());
+  } while (state_hc == NULL);
+
+  int final_dst_size = LZ4_compress_HC_destSize(
+      state_hc, src_data, dst_data, &src_size, dst_size, compression_level);
+  enif_free(state_hc);
+
+  if (final_dst_size == 0) {
+    return enif_make_badarg(env);
+  }
+
+  enif_realloc_binary(&dst_bin, final_dst_size);
+  ERL_NIF_TERM dst = enif_make_binary(env, &dst_bin);
   ERL_NIF_TERM bytes_read = enif_make_int(env, src_size);
   return enif_make_tuple2(env, dst, bytes_read);
 }
@@ -221,6 +266,7 @@ static ErlNifFunc nif_funcs[] = {
     {"compress_bound", 1, compress_bound},
     {"compress_fast", 2, compress_fast},
     {"compress_dest_size", 2, compress_dest_size},
+    {"compress_hc_dest_size", 3, compress_hc_dest_size},
     {"decompress_safe_partial", 2, decompress_safe_partial}};
 
 ERL_NIF_INIT(lz4_nif, nif_funcs, NULL, NULL, NULL, NULL);
