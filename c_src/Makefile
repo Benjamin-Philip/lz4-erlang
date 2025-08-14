@@ -44,8 +44,11 @@ LDFLAGS += -shared
 
 # Verbosity.
 
-c_verbose_0 = @echo " C     " $(?F);
-c_verbose = $(c_verbose_$(V))
+VERBOSE ?= 0
+ACTUAL_CC := $(CC)
+CC_0 = @echo " CC     $@";$(ACTUAL_CC)
+CC_1 = $(ACTUAL_CC)
+CC = $(CC_$(VERBOSE))
 
 link_verbose_0 = @echo " LD    " $(@F);
 link_verbose = $(link_verbose_$(V))
