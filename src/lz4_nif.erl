@@ -338,7 +338,8 @@ decompress_safe_partial(_, _) ->
 %%%%%%%%%%%%%%%%%%%%
 
 init() ->
-    erlang:load_nif("priv/lz4_nif", 0).
+    {ok, Path} = application:get_env(lz4, lz4_nif_path),
+    erlang:load_nif(Path, 0).
 
 not_loaded(Line) ->
     erlang:nif_error({not_loaded, [{module, ?MODULE}, {line, Line}]}).
