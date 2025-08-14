@@ -10,9 +10,7 @@ ERL_INTERFACE_LIB_DIR ?= $(shell erl -noshell -eval "io:format(\"~ts\", [code:li
 PROFILE ?= default
 C_SRC_DIR = $(CURDIR)
 C_SRC_OUTPUT_DIR = $(BASEDIR)/priv/$(PROFILE)
-LZ4_NIF_OUTPUT ?= $(C_SRC_OUTPUT_DIR)/lz4_nif.so
-LZ4FRAME_NIF_OUTPUT ?= $(C_SRC_OUTPUT_DIR)/lz4_frame_nif.so
-C_SRC_OUTPUT = $(LZ4_NIF_OUTPUT) $(LZ4FRAME_NIF_OUTPUT)
+C_SRC_OUTPUT = $(addprefix $(C_SRC_OUTPUT_DIR)/, lz4_nif.so lz4frame_nif.so)
 # System type and C compiler/flags.
 
 UNAME_SYS := $(shell uname -s)
@@ -50,8 +48,9 @@ CC_0 = @echo " CC     $@";$(ACTUAL_CC)
 CC_1 = $(ACTUAL_CC)
 CC = $(CC_$(VERBOSE))
 
-link_verbose_0 = @echo " LD    " $(@F);
-link_verbose = $(link_verbose_$(V))
+CCLD_0 = @echo " CCLD   $@"; $(ACTUAL_CC)
+CCLD_1 = $(ACTUAL_CC)
+CCLD = $(CCLD_$(VERBOSE))
 
 SOURCES := $(shell find $(C_SRC_DIR) -type f \( -name "*.c" -and ! -name "*_nif.c" \))
 OBJDIR = $(CURDIR)/$(PROFILE)
@@ -60,17 +59,13 @@ OBJECTS = $(addprefix $(OBJDIR)/, $(addsuffix .o, $(basename $(notdir $(SOURCES)
 .DEFAULT := all
 all: $(C_SRC_OUTPUT)
 
-$(LZ4_NIF_OUTPUT): lz4_nif.c $(OBJECTS)
+$(C_SRC_OUTPUT_DIR)/%_nif.so: %_nif.c $(OBJECTS)
 	@mkdir -p $(C_SRC_OUTPUT_DIR)
-	$(link_verbose) $(CC) lz4_nif.c $(OBJECTS) $(NIF_CFLAGS) $(LDFLAGS) $(LDLIBS) -o $(LZ4_NIF_OUTPUT)
-
-$(LZ4FRAME_NIF_OUTPUT): lz4frame_nif.c $(OBJECTS)
-	@mkdir -p $(BASEDIR)/priv/
-	$(link_verbose) $(CC) lz4frame_nif.c $(OBJECTS) $(NIF_CFLAGS) $(LDFLAGS) $(LDLIBS) -o $(LZ4FRAME_NIF_OUTPUT)
+	$(CCLD) $< $(OBJECTS) $(NIF_CFLAGS) $(LDFLAGS) $(LDLIBS) -o $@
 
 $(OBJDIR)/%.o: %.c
 	@mkdir -p $(OBJDIR)
 	$(c_verbose) $(CC) $(OBJ_CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(C_SRC_OUTPUT) $(OBJECTS)
+	@rm -f $(C_SRC_OUTPUT) $(OBJECTS)
