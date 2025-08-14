@@ -17,20 +17,16 @@ UNAME_SYS := $(shell uname -s)
 ifeq ($(UNAME_SYS), Darwin)
 	CC ?= cc
 	CFLAGS ?= -O3 -std=c99 -finline-functions -Wall -Wmissing-prototypes
-	CXXFLAGS ?= -O3 -finline-functions -Wall
 	LDFLAGS ?= -flat_namespace -undefined suppress
 else ifeq ($(UNAME_SYS), FreeBSD)
 	CC ?= cc
 	CFLAGS ?= -O3 -std=c99 -finline-functions -Wall -Wmissing-prototypes
-	CXXFLAGS ?= -O3 -finline-functions -Wall
 else ifeq ($(UNAME_SYS), Linux)
 	CC ?= gcc
 	CFLAGS ?= -O3 -std=c99 -finline-functions -Wall -Wmissing-prototypes
-	CXXFLAGS ?= -O3 -finline-functions -Wall
 endif
 
 CFLAGS += -fPIC -I $(ERTS_INCLUDE_DIR) -I $(ERL_INTERFACE_INCLUDE_DIR)
-CXXFLAGS += -fPIC -I $(ERTS_INCLUDE_DIR) -I $(ERL_INTERFACE_INCLUDE_DIR)
 
 LDLIBS += -L $(ERL_INTERFACE_LIB_DIR) -lei
 LDFLAGS += -shared
@@ -39,9 +35,6 @@ LDFLAGS += -shared
 
 c_verbose_0 = @echo " C     " $(?F);
 c_verbose = $(c_verbose_$(V))
-
-cpp_verbose_0 = @echo " CPP   " $(?F);
-cpp_verbose = $(cpp_verbose_$(V))
 
 link_verbose_0 = @echo " LD    " $(@F);
 link_verbose = $(link_verbose_$(V))
