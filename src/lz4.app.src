@@ -1,13 +1,13 @@
 {application, lz4, [
-    {description, "An OTP library"},
+    {description, "Erlang bindings to the LZ4 compression library"},
     {vsn, "0.1.0"},
     {registered, []},
     {applications, [
         kernel,
         stdlib
     ]},
-    {env, []},
-    {modules, []},
+    {env, [{lz4_nif_path, "priv/default/lz4_nif"}]},
+    {modules, [lz4, lz4_nif]},
     {licenses, ["Apache-2.0"]},
-    {links, []}
+    {links, ["https://github.com/Benjamin-Philip/lz4-erlang", "https://github.com/lz4/lz4"]}
 ]}.
